@@ -1,2 +1,4 @@
-package com.digital.signer.constant;public class SQLConstant {
+package com.digital.signer.constant;
+
+public class SQLConstant {
 }
