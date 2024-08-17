@@ -34,6 +34,8 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import java.security.KeyPairGenerator;
+import java.security.KeyPair;
 
 
 
@@ -58,6 +60,10 @@ public class Util {
 			error = "Exception lanzada por NullPointerException.";
 		}
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MensajeRespuestaHTTP(metodo + error));
+	}
+
+	public static String encodingPublicKeyBase64 (byte[] bytes) {
+		return Base64.encode(bytes);
 	}
 
 	public static void crearArchivoscsv(String[] inputFiles) throws Exception {
@@ -215,7 +221,14 @@ public class Util {
 		
 	}
 	
-	
+	public static KeyPair generateKeyPair(String algorithm,int wrenchSize) throws NoSuchAlgorithmException{
+
+		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(algorithm);
+		keyPairGenerator.initialize(wrenchSize);
+
+		return keyPairGenerator.generateKeyPair();
+
+	}
 	public static byte[] joinByteArray(byte[][] matriz) {
 	 
 	    int totalLength = 0;
@@ -352,7 +365,7 @@ public class Util {
 		
 		StringBuilder sb = new StringBuilder();
 	    sb.append("-----BEGIN PUBLIC KEY-----\n");
-	        
+
 	    int index = 0;
 	    while (index < key.length()) {
 	            sb.append(key, index, Math.min(index + 64, key.length()));

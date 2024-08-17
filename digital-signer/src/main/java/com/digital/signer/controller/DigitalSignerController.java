@@ -20,6 +20,17 @@ public class DigitalSignerController {
 
     }
 
+    @PostMapping("user/{id}/generateKeyPair")
+    public ResponseEntity<Object> generateKeyPairForUser(@PathVariable Integer id) {
+        try {
+            return Util.getResponseSuccessful(this.digitalSignerService.generateKeyPairForUser(id));
+        } catch (Exception e) {
+            return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".generateKeyPairForUser ", e.getMessage());
+        }
+
+
+    }
+
     @PostMapping("/user/create")
     public ResponseEntity<Object> createUser(@RequestBody() CreateUserRequestDTO request) {
         try {
