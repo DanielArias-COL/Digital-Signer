@@ -1,0 +1,14 @@
+CREATE SEQUENCE public.id_user_seq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 9223372036854775807
+	START 1
+	CACHE 1
+	NO CYCLE;
+
+CREATE TABLE public.user_ds (
+	id int8 NOT NULL DEFAULT nextval('id_user_seq'::regclass),
+	username varchar NOT NULL,
+	"password" varchar NOT NULL,
+	CONSTRAINT user_ds_pk PRIMARY KEY (id)
+);
