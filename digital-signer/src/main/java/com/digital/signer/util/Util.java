@@ -1,5 +1,9 @@
 package com.digital.signer.util;
 
+import com.digital.signer.common.MensajeRespuestaHTTP;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -36,8 +40,26 @@ import javax.crypto.SecretKey;
 
 
 public class Util {
-	
-	
+
+	public static boolean isNull(String valor) {
+		return valor == null || valor.trim().length() == 0;
+	}
+
+	public static ResponseEntity<Object> getResponseSuccessful(Object body) {
+		return ResponseEntity.status(HttpStatus.OK).body(body);
+	}
+
+	public static ResponseEntity<Object> getResponseBadRequest(String bussinesMessage) {
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MensajeRespuestaHTTP(bussinesMessage));
+	}
+
+	public static ResponseEntity<Object> getResponseError(String metodo, String error) {
+		if (error == null || error.trim().length() == 0) {
+			error = "Exception lanzada por NullPointerException.";
+		}
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MensajeRespuestaHTTP(metodo + error));
+	}
+
 	public static void crearArchivoscsv(String[] inputFiles) throws Exception {
 	    PrivateKey privateKey1024 = Util.recuperarLLavePrivada("private_key1024.pem");
 	    PublicKey publicKey1024 = Util.recuperarLLavePublica("public_key1024.pem");
