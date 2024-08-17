@@ -12,3 +12,25 @@ CREATE TABLE public.user_ds (
 	"password" varchar NOT NULL,
 	CONSTRAINT user_ds_pk PRIMARY KEY (id)
 );
+
+CREATE SEQUENCE public.id_key_seq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 9223372036854775807
+	START 1
+	CACHE 1
+	NO CYCLE;
+
+CREATE TABLE public."key" (
+	id int8 DEFAULT nextval('id_key_seq'::regclass) NULL,
+	"key" varchar NOT NULL,
+	CONSTRAINT key_unique UNIQUE (id)
+);
+
+CREATE TABLE public.user_key (
+	id_user int8 NOT NULL,
+	id_key int8 NOT NULL
+);
+
+ALTER TABLE public.user_key ADD CONSTRAINT user_key_key_fk FOREIGN KEY (id_key) REFERENCES public."key"(id);
+ALTER TABLE public.user_key ADD CONSTRAINT user_key_user_ds_fk FOREIGN KEY (id_user) REFERENCES public.user_ds(id);

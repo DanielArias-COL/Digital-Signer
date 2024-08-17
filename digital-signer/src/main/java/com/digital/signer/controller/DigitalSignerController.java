@@ -20,7 +20,7 @@ public class DigitalSignerController {
 
     }
 
-    @PostMapping("user/{id}/generateKeyPair")
+    @GetMapping("user/{id}/generateKeyPair")
     public ResponseEntity<Object> generateKeyPairForUser(@PathVariable Integer id) {
         try {
             return Util.getResponseSuccessful(this.digitalSignerService.generateKeyPairForUser(id));
