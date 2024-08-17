@@ -15,7 +15,7 @@ public class DigitalSignerService {
     private final DataSource dsDigitalSigner;
 
     @Autowired
-    public DigitalSignerService(@Qualifier("workerDataSource")DataSource dsDigitalSigner) {
+    public DigitalSignerService(@Qualifier("digitalSignerDataSource")DataSource dsDigitalSigner) {
         this.dsDigitalSigner = dsDigitalSigner;
     }
 }
