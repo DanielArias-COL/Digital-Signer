@@ -1,6 +1,7 @@
 package com.digital.signer.controller;
 
 import com.digital.signer.dto.user.CreateUserRequestDTO;
+import com.digital.signer.dto.user.SingInRequestDTO;
 import com.digital.signer.service.DigitalSignerService;
 import com.digital.signer.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +28,6 @@ public class DigitalSignerController {
         } catch (Exception e) {
             return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".generateKeyPairForUser ", e.getMessage());
         }
-
-
     }
 
     @PostMapping("/user/create")
@@ -37,6 +36,15 @@ public class DigitalSignerController {
             return Util.getResponseSuccessful(this.digitalSignerService.createUser(request));
         } catch (Exception e) {
             return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".createUser ", e.getMessage());
+        }
+    }
+
+    @PostMapping("/user/singIn")
+    public ResponseEntity<Object> singIn(@RequestBody() SingInRequestDTO request) {
+        try {
+            return Util.getResponseSuccessful(this.digitalSignerService.singIn(request));
+        } catch (Exception e) {
+            return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".singIn ", e.getMessage());
         }
     }
 }

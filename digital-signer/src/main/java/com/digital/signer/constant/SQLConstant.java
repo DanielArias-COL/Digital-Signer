@@ -7,4 +7,6 @@ public class SQLConstant {
     public static final String SAVE_KEY = "INSERT INTO public.\"key\" (\"key\") VALUES(?) RETURNING id";
 
     public static final String SAVE_USER_KEY = "INSERT INTO public.user_key (id_user, id_key) VALUES(?, ?)";
+
+    public static final String SELECT_USER_INFO = "SELECT id FROM public.user_ds WHERE username = ? AND password = ?";
 }

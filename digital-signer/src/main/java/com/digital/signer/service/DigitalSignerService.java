@@ -3,7 +3,11 @@ package com.digital.signer.service;
 import com.digital.signer.constant.Constant;
 import com.digital.signer.constant.SQLConstant;
 import com.digital.signer.dto.key.GenerateKeyDTO;
+import com.digital.signer.dto.transversal.ErrorDTO;
 import com.digital.signer.dto.user.CreateUserRequestDTO;
+import com.digital.signer.dto.user.SingInRequestDTO;
+import com.digital.signer.dto.user.SingInResponseDTO;
+import com.digital.signer.jdbc.CerrarRecursosJDBC;
 import com.digital.signer.jdbc.UtilJDBC;
 import com.digital.signer.jdbc.ValueSQL;
 import com.digital.signer.util.Util;
@@ -17,6 +21,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Types;
 import java.util.logging.Logger;
 
@@ -50,7 +56,7 @@ public class DigitalSignerService {
         return user;
     }
 
-    public GenerateKeyDTO generateKeyPairForUser(Integer idUser) throws Exception {
+    public GenerateKeyDTO generateKeyPairForUser(Integer idUser) {
         logger.log(INFO, Constant.START, Constant.GENERATE_KEY_PAIR + idUser);
 
         GenerateKeyDTO response = new GenerateKeyDTO();
@@ -71,9 +77,44 @@ public class DigitalSignerService {
 
             response.setKey(privateKey.getEncoded());
         } catch (Exception e) {
-            throw new Exception(e);
+            logger.log(SEVERE, Constant.END, Constant.GENERATE_KEY_PAIR + e.getMessage());
         }
         logger.log(INFO, Constant.END, Constant.GENERATE_KEY_PAIR + response);
+        return response;
+    }
+
+    public SingInResponseDTO singIn(SingInRequestDTO request) throws Exception {
+        logger.log(INFO, Constant.START, Constant.SING_IN + request);
+
+        SingInResponseDTO response = new SingInResponseDTO();
+        ErrorDTO error = new ErrorDTO();
+        error.setErrorCode(Constant.ERROR_CODE_401);
+        error.setErrorMessage(Constant.ERROR_MESSAGE_401);
+        response.setError(error);
+
+        PreparedStatement pst = null;
+        ResultSet res = null;
+        try (Connection connection = this.dsDigitalSigner.getConnection()) {
+
+            pst = connection.prepareStatement(SQLConstant.SELECT_USER_INFO);
+            pst.setString(1, request.getUser());
+            pst.setString(2, request.getPassword());
+
+            res = pst.executeQuery();
+
+            if (res.next()) {
+                response.setId(res.getInt(1));
+                error.setErrorCode(Constant.ERROR_CODE_200);
+                error.setErrorMessage(Constant.ERROR_MESSAGE_200);
+                response.setError(error);
+            }
+        } catch (Exception e) {
+            logger.log(SEVERE, Constant.END, Constant.SING_IN + e.getMessage());
+        } finally {
+            CerrarRecursosJDBC.closeResultSet(res);
+            CerrarRecursosJDBC.closePreparedStatement(pst);
+        }
+        logger.log(INFO, Constant.END, Constant.SING_IN + response);
         return response;
     }
 }
