@@ -15,14 +15,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.security.GeneralSecurityException;
-import java.security.InvalidKeyException;
-import java.security.Key;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.SecureRandom;
+import java.security.*;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -34,11 +27,6 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
-import java.security.KeyPairGenerator;
-import java.security.KeyPair;
-
-
-
 
 
 public class Util {
@@ -229,6 +217,14 @@ public class Util {
 		return keyPairGenerator.generateKeyPair();
 
 	}
+
+	public static String getHash(byte[] inputBA, String algorithm) throws Exception {
+		MessageDigest hasher = MessageDigest.getInstance(algorithm);
+		hasher.update(inputBA);
+		return Util.byteArrayToHexString(hasher.digest(),"");
+
+	}
+
 	public static byte[] joinByteArray(byte[][] matriz) {
 	 
 	    int totalLength = 0;

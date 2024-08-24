@@ -4,6 +4,8 @@ import com.digital.signer.constant.Constant;
 import com.digital.signer.constant.SQLConstant;
 import com.digital.signer.dto.files.FileDTO;
 import com.digital.signer.dto.files.ListFilesDTO;
+import com.digital.signer.dto.files.AddFileDTO;
+import com.digital.signer.dto.files.SaveFilesResponseDTO;
 import com.digital.signer.dto.key.GenerateKeyDTO;
 import com.digital.signer.dto.transversal.ErrorDTO;
 import com.digital.signer.dto.user.CreateUserRequestDTO;
@@ -18,6 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.sql.DataSource;
 import java.security.KeyPair;
@@ -185,9 +188,8 @@ public class DigitalSignerService {
 
                 file.setId(res.getInt(1));
                 file.setName(res.getString(2));
-                file.setName(res.getString(3));
-                file.setBytes(res.getString(4).getBytes());
-                file.setIntegrityHash(res.getString(5));
+                file.setBytes(res.getString(3).getBytes());
+                file.setIntegrityHash(res.getString(4));
                 files.add(file);
             }
 
@@ -207,4 +209,60 @@ public class DigitalSignerService {
         return response;
     }
 
+    public SaveFilesResponseDTO saveFiles(HttpServletRequest request, MultipartFile[] files) {
+        logger.log(INFO, Constant.START, Constant.SAVE_FILES);
+
+        SaveFilesResponseDTO response = new SaveFilesResponseDTO();
+        ErrorDTO error = new ErrorDTO();
+        error.setErrorCode(Constant.ERROR_CODE_403);
+        error.setErrorMessage(Constant.ERROR_MESSAGE_403);
+        response.setError(error);
+
+        String authHeader = request.getHeader("Authorization");
+        String token = null;
+        String userId = null;
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+            userId = jwtUtil.extractUserId(token);
+        }
+
+        if (userId == null || !jwtUtil.validateToken(token)) {
+            throw new RuntimeException("Invalid JWT Token");
+        }
+
+        AddFileDTO fileInsert;
+        for (MultipartFile file : files) {
+            fileInsert = new AddFileDTO();
+            fileInsert.setSigned(Boolean.FALSE);
+            fileInsert.setName(file.getOriginalFilename());
+            try {
+                fileInsert.setBytes(file.getBytes());
+                fileInsert.setIntegrityHash(Util.getHash(file.getBytes(), "SHA-256"));
+                addFiles(fileInsert, Integer.valueOf(userId));
+                error.setErrorCode(Constant.ERROR_CODE_200);
+                error.setErrorMessage(Constant.ERROR_MESSAGE_200);
+                response.setError(error);
+            } catch (Exception e) {
+                logger.log(SEVERE, Constant.END, Constant.SAVE_FILES + e.getMessage());
+            }
+        }
+
+        logger.log(INFO, Constant.END, Constant.SAVE_FILES + response);
+        return response;
+    }
+
+    private void addFiles(AddFileDTO file, Integer userId) throws Exception {
+        logger.log(INFO, Constant.START, Constant.ADD_FILES);
+        try (Connection connection = this.dsDigitalSigner.getConnection()) {
+            UtilJDBC.insertUpdate(connection,
+                    SQLConstant.ADD_FILE,
+                    ValueSQL.get(file.getName(), Types.VARCHAR),
+                    ValueSQL.get(file.getBytes(), Types.BLOB),
+                    ValueSQL.get(file.getIntegrityHash(), Types.VARCHAR),
+                    ValueSQL.get(userId, Types.INTEGER),
+                    ValueSQL.get(file.isSigned(), Types.BOOLEAN));
+        }
+        logger.log(INFO, Constant.END, Constant.ADD_FILES );
+    }
 }

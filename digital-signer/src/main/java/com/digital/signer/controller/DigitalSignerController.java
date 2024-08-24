@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/digitalSigner")
@@ -59,6 +60,15 @@ public class DigitalSignerController {
             return Util.getResponseSuccessful(this.digitalSignerService.listFiles(request));
         } catch (Exception e) {
             return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".listFiles ", e.getMessage());
+        }
+    }
+
+    @PostMapping("/user/saveFiles")
+    public ResponseEntity<Object> saveFiles(HttpServletRequest request, @RequestBody MultipartFile[] files) {
+        try {
+            return Util.getResponseSuccessful(this.digitalSignerService.saveFiles(request,files));
+        } catch (Exception e) {
+            return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".saveFiles ", e.getMessage());
         }
     }
 }
