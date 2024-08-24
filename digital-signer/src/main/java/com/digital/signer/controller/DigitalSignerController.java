@@ -3,7 +3,9 @@ package com.digital.signer.controller;
 import com.digital.signer.dto.user.CreateUserRequestDTO;
 import com.digital.signer.dto.user.SingInRequestDTO;
 import com.digital.signer.service.DigitalSignerService;
+import com.digital.signer.util.JwtUtil;
 import com.digital.signer.util.Util;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +17,9 @@ public class DigitalSignerController {
     @Autowired
     private DigitalSignerService digitalSignerService;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     @GetMapping("/test")
     public String test() {
         return "test";
@@ -22,9 +27,9 @@ public class DigitalSignerController {
     }
 
     @GetMapping("user/{id}/generateKeyPair")
-    public ResponseEntity<Object> generateKeyPairForUser(@PathVariable Integer id) {
+    public ResponseEntity<Object> generateKeyPairForUser(HttpServletRequest request, @PathVariable Integer id) {
         try {
-            return Util.getResponseSuccessful(this.digitalSignerService.generateKeyPairForUser(id));
+            return Util.getResponseSuccessful(this.digitalSignerService.generateKeyPairForUser(request, id));
         } catch (Exception e) {
             return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".generateKeyPairForUser ", e.getMessage());
         }

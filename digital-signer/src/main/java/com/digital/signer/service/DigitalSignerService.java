@@ -12,6 +12,7 @@ import com.digital.signer.jdbc.UtilJDBC;
 import com.digital.signer.jdbc.ValueSQL;
 import com.digital.signer.util.JwtUtil;
 import com.digital.signer.util.Util;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -61,13 +62,26 @@ public class DigitalSignerService {
         return user;
     }
 
-    public GenerateKeyDTO generateKeyPairForUser(Integer idUser) {
+    public GenerateKeyDTO generateKeyPairForUser(HttpServletRequest request, Integer idUser) {
         logger.log(INFO, Constant.START, Constant.GENERATE_KEY_PAIR + idUser);
 
         GenerateKeyDTO response = new GenerateKeyDTO();
 
+        String authHeader = request.getHeader("Authorization");
+        String token = null;
+        String username = null;
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+            username = jwtUtil.extractUsername(token);
+        }
+
+        if (username == null || !jwtUtil.validateToken(token)) {
+            throw new RuntimeException("Invalid JWT Token");
+        }
+
         try (Connection connection = this.dsDigitalSigner.getConnection()) {
-            KeyPair keyPair = Util.generateKeyPair("RSA",1024);
+            KeyPair keyPair = Util.generateKeyPair("RSA", 1024);
             PrivateKey privateKey = keyPair.getPrivate();
             PublicKey publicKey = keyPair.getPublic();
 
