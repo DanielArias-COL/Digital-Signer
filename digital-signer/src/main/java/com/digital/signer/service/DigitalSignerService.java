@@ -10,6 +10,7 @@ import com.digital.signer.dto.user.SingInResponseDTO;
 import com.digital.signer.jdbc.CerrarRecursosJDBC;
 import com.digital.signer.jdbc.UtilJDBC;
 import com.digital.signer.jdbc.ValueSQL;
+import com.digital.signer.util.JwtUtil;
 import com.digital.signer.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -17,7 +18,6 @@ import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.sql.Connection;
@@ -37,8 +37,13 @@ public class DigitalSignerService {
     private final DataSource dsDigitalSigner;
 
     @Autowired
-    public DigitalSignerService(@Qualifier("digitalSignerDataSource")DataSource dsDigitalSigner) {
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    public DigitalSignerService(@Qualifier("digitalSignerDataSource")DataSource dsDigitalSigner,
+                                JwtUtil jwtUtil) {
         this.dsDigitalSigner = dsDigitalSigner;
+        this.jwtUtil=jwtUtil;
     }
 
     public CreateUserRequestDTO createUser(CreateUserRequestDTO user) {
@@ -104,6 +109,11 @@ public class DigitalSignerService {
 
             if (res.next()) {
                 response.setId(res.getInt(1));
+
+                String jwtToken = jwtUtil.generateToken(request.getUser());
+
+                response.setJwt(jwtToken);
+
                 error.setErrorCode(Constant.ERROR_CODE_200);
                 error.setErrorMessage(Constant.ERROR_MESSAGE_200);
                 response.setError(error);

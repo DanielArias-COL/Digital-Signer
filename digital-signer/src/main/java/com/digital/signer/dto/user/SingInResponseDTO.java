@@ -19,4 +19,6 @@ public class SingInResponseDTO implements Serializable {
     private Integer id;
 
     private ErrorDTO error;
+
+    private String jwt;
 }
