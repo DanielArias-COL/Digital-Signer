@@ -34,3 +34,21 @@ CREATE TABLE public.user_key (
 
 ALTER TABLE public.user_key ADD CONSTRAINT user_key_key_fk FOREIGN KEY (id_key) REFERENCES public."key"(id);
 ALTER TABLE public.user_key ADD CONSTRAINT user_key_user_ds_fk FOREIGN KEY (id_user) REFERENCES public.user_ds(id);
+
+CREATE SEQUENCE public.file_seq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 9223372036854775807
+	START 1
+	CACHE 1
+	NO CYCLE;
+
+CREATE TABLE public.file (
+	id int8 DEFAULT nextval('file_seq'::regclass) NULL,
+	"name" varchar NOT NULL,
+	bytes text NOT NULL,
+	integrity_hash varchar NOT NULL,
+	user_ds_id int8 NOT NULL
+);
+
+ALTER TABLE public.file ADD CONSTRAINT file_user_ds_fk FOREIGN KEY (id) REFERENCES public.user_ds(id);

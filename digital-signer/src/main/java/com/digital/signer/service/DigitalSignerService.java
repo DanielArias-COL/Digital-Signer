@@ -2,6 +2,8 @@ package com.digital.signer.service;
 
 import com.digital.signer.constant.Constant;
 import com.digital.signer.constant.SQLConstant;
+import com.digital.signer.dto.files.FileDTO;
+import com.digital.signer.dto.files.ListFilesDTO;
 import com.digital.signer.dto.key.GenerateKeyDTO;
 import com.digital.signer.dto.transversal.ErrorDTO;
 import com.digital.signer.dto.user.CreateUserRequestDTO;
@@ -25,6 +27,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import static java.util.logging.Level.INFO;
@@ -62,21 +66,21 @@ public class DigitalSignerService {
         return user;
     }
 
-    public GenerateKeyDTO generateKeyPairForUser(HttpServletRequest request, Integer idUser) {
-        logger.log(INFO, Constant.START, Constant.GENERATE_KEY_PAIR + idUser);
+    public GenerateKeyDTO generateKeyPairForUser(HttpServletRequest request) {
+        logger.log(INFO, Constant.START, Constant.GENERATE_KEY_PAIR);
 
         GenerateKeyDTO response = new GenerateKeyDTO();
 
         String authHeader = request.getHeader("Authorization");
         String token = null;
-        String username = null;
+        String userId = null;
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
-            username = jwtUtil.extractUsername(token);
+            userId = jwtUtil.extractUserId(token);
         }
 
-        if (username == null || !jwtUtil.validateToken(token)) {
+        if (userId == null || !jwtUtil.validateToken(token)) {
             throw new RuntimeException("Invalid JWT Token");
         }
 
@@ -91,7 +95,7 @@ public class DigitalSignerService {
 
             UtilJDBC.insertUpdate(connection,
                     SQLConstant.SAVE_USER_KEY,
-                    ValueSQL.get(idUser, Types.INTEGER),
+                    ValueSQL.get(userId, Types.INTEGER),
                     ValueSQL.get(idKey.intValue(), Types.INTEGER));
 
             response.setKey(privateKey.getEncoded());
@@ -124,7 +128,7 @@ public class DigitalSignerService {
             if (res.next()) {
                 response.setId(res.getInt(1));
 
-                String jwtToken = jwtUtil.generateToken(request.getUser());
+                String jwtToken = jwtUtil.generateToken(response.getId());
 
                 response.setJwt(jwtToken);
 
@@ -141,4 +145,66 @@ public class DigitalSignerService {
         logger.log(INFO, Constant.END, Constant.SING_IN + response);
         return response;
     }
+
+    public ListFilesDTO listFiles(HttpServletRequest request) throws Exception {
+        logger.log(INFO, Constant.START, Constant.LIST_FILES);
+
+        ListFilesDTO response = new ListFilesDTO();
+        List<FileDTO> files = new ArrayList<>();
+        ErrorDTO error = new ErrorDTO();
+        error.setErrorCode(Constant.ERROR_CODE_402);
+        error.setErrorMessage(Constant.ERROR_MESSAGE_402);
+        response.setError(error);
+
+        String authHeader = request.getHeader("Authorization");
+        String token = null;
+        String userId = null;
+
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+            userId = jwtUtil.extractUserId(token);
+        }
+
+        if (userId == null || !jwtUtil.validateToken(token)) {
+            throw new RuntimeException("Invalid JWT Token");
+        }
+
+        PreparedStatement pst = null;
+        ResultSet res = null;
+
+        try (Connection connection = this.dsDigitalSigner.getConnection()) {
+
+            pst = connection.prepareStatement(SQLConstant.SELECT_USER_FILES);
+            pst.setInt(1, Integer.parseInt(userId));
+            res = pst.executeQuery();
+
+            FileDTO file;
+            while (res.next()) {
+                file = new FileDTO();
+
+                file.setId(res.getInt(1));
+                file.setName(res.getString(2));
+                file.setName(res.getString(3));
+                file.setBytes(res.getString(4).getBytes());
+                file.setIntegrityHash(res.getString(5));
+                files.add(file);
+            }
+
+            if (!files.isEmpty()) {
+                error.setErrorCode(Constant.ERROR_CODE_200);
+                error.setErrorMessage(Constant.ERROR_MESSAGE_200);
+                response.setError(error);
+            }
+            response.setListFiles(files);
+        } catch (Exception e) {
+            logger.log(SEVERE, Constant.END, Constant.LIST_FILES + e.getMessage());
+        } finally {
+            CerrarRecursosJDBC.closeResultSet(res);
+            CerrarRecursosJDBC.closePreparedStatement(pst);
+        }
+        logger.log(INFO, Constant.END, Constant.LIST_FILES + response);
+        return response;
+    }
+
 }

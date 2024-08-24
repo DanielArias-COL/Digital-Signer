@@ -26,10 +26,10 @@ public class DigitalSignerController {
 
     }
 
-    @GetMapping("user/{id}/generateKeyPair")
-    public ResponseEntity<Object> generateKeyPairForUser(HttpServletRequest request, @PathVariable Integer id) {
+    @GetMapping("user/generateKeyPair")
+    public ResponseEntity<Object> generateKeyPairForUser(HttpServletRequest request) {
         try {
-            return Util.getResponseSuccessful(this.digitalSignerService.generateKeyPairForUser(request, id));
+            return Util.getResponseSuccessful(this.digitalSignerService.generateKeyPairForUser(request));
         } catch (Exception e) {
             return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".generateKeyPairForUser ", e.getMessage());
         }
@@ -50,6 +50,15 @@ public class DigitalSignerController {
             return Util.getResponseSuccessful(this.digitalSignerService.singIn(request));
         } catch (Exception e) {
             return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".singIn ", e.getMessage());
+        }
+    }
+
+    @GetMapping("/user/listFiles")
+    public ResponseEntity<Object> listFiles(HttpServletRequest request) {
+        try {
+            return Util.getResponseSuccessful(this.digitalSignerService.listFiles(request));
+        } catch (Exception e) {
+            return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".listFiles ", e.getMessage());
         }
     }
 }

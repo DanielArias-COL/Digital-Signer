@@ -10,6 +10,7 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Component
@@ -22,7 +23,7 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String extractUsername(String token) {
+    public String extractUserId(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
@@ -47,22 +48,27 @@ public class JwtUtil {
         return extractExpiration(token).before(new Date());
     }
 
-    public String generateToken(String username) {
+    public String generateToken(Integer idUser) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, username);
+        return createToken(claims, idUser);
     }
 
-    private String createToken(Map<String, Object> claims, String subject) {
+    private String createToken(Map<String, Object> claims, Integer subject) {
+        long currentTimeMillis = System.currentTimeMillis();
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(subject)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // Token válido por 10 horas
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .setSubject(String.valueOf(subject)) // sub: Identifica al sujeto del token
+                .setIssuer("http://localhost:9078") // iss: Identifica al emisor del token
+                .setAudience("http://localhost:4200") // aud: Identifica al destinatario del token
+                .setIssuedAt(new Date(currentTimeMillis)) // iat: Fecha y hora en que se emitió el token
+                .setNotBefore(new Date(currentTimeMillis)) // nbf: Momento a partir del cual el token es válido
+                .setExpiration(new Date(currentTimeMillis + 1000 * 60 * 60 * 10)) // exp: Establece el tiempo de expiración (10 horas)
+                .setId(UUID.randomUUID().toString()) // jti: Identificador único para este JWT
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256) // Firmado con el algoritmo HS256
                 .compact();
     }
 
     public boolean validateToken(String token) {
-        return (extractUsername(token) != null && !isTokenExpired(token));
+        return (extractUserId(token) != null && !isTokenExpired(token));
     }
 }
