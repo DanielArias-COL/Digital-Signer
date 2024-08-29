@@ -49,7 +49,7 @@ CREATE TABLE public.file (
 	bytes bytea NOT NULL,
 	integrity_hash varchar NOT NULL,
 	user_ds_id int8 NOT NULL,
-	is_signed bool NOT NULL,
+	digital_signed varchar NULL,
 	CONSTRAINT file_unique UNIQUE (id)
 );
 
