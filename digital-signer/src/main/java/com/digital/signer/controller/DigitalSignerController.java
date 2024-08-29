@@ -19,8 +19,6 @@ public class DigitalSignerController {
     @Autowired
     private DigitalSignerService digitalSignerService;
 
-    @Autowired
-    private JwtUtil jwtUtil;
 
     @GetMapping("/test")
     public String test() {
