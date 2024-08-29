@@ -93,4 +93,29 @@ public class UtilJDBC {
             CerrarRecursosJDBC.closeResultSet(res);
         }
     }
+
+    public static boolean exists(Connection con, String sql, ValueSQL... where) throws Exception {
+        PreparedStatement pst = null;
+        ResultSet res = null;
+        try {
+            pst = con.prepareStatement(sql);
+
+            if (where != null && where.length > 0) {
+                int posicion = 1;
+                for (ValueSQL valor : where) {
+                    setValorNotNull(pst, valor, posicion);
+                    posicion++;
+                }
+            }
+
+            res = pst.executeQuery();
+            if (res.next()) {
+                return res.getBoolean(1);
+            }
+            return false;
+        } finally {
+            CerrarRecursosJDBC.closeResultSet(res);
+            CerrarRecursosJDBC.closePreparedStatement(pst);
+        }
+    }
 }
