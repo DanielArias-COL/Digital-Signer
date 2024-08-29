@@ -190,7 +190,7 @@ public class DigitalSignerService {
                 file.setName(res.getString(2));
                 file.setBytes(res.getString(3).getBytes());
                 file.setIntegrityHash(res.getString(4));
-                file.setDigitalSigned(res.getString(5));
+                file.setDigitalSigned(res.getString(6));
                 files.add(file);
             }
 
