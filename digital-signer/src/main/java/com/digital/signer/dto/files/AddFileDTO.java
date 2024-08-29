@@ -19,6 +19,6 @@ public class AddFileDTO implements  Serializable{
     private String name;
     private byte [] bytes;
     private String integrityHash;
-    private boolean isSigned;
+    private String digitalSigned;
 
 }

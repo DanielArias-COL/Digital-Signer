@@ -235,7 +235,6 @@ public class DigitalSignerService {
         AddFileDTO fileInsert;
         for (MultipartFile file : files) {
             fileInsert = new AddFileDTO();
-            fileInsert.setSigned(Boolean.FALSE);
             fileInsert.setName(file.getOriginalFilename());
             try {
                 fileInsert.setBytes(file.getBytes());
