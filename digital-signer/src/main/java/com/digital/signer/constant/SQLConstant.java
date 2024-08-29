@@ -10,11 +10,11 @@ public class SQLConstant {
 
     public static final String SELECT_USER_INFO = "SELECT id FROM public.user_ds WHERE username = ? AND password = ?";
 
-    public static final String SELECT_USER_FILES = "SELECT id, \"name\", bytes, integrity_hash, user_ds_id " +
+    public static final String SELECT_USER_FILES = "SELECT id, \"name\", bytes, integrity_hash, user_ds_id, digital_signed " +
             "FROM public.file WHERE user_ds_id = ?";
 
     public static final String ADD_FILE = "INSERT INTO public.file " +
-            "(\"name\", bytes, integrity_hash, user_ds_id, is_signed) " +
-            "VALUES(?, ?, ?, ?, ?)";
+            "(\"name\", bytes, integrity_hash, user_ds_id) " +
+            "VALUES(?, ?, ?, ?)";
 
 }

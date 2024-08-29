@@ -190,6 +190,7 @@ public class DigitalSignerService {
                 file.setName(res.getString(2));
                 file.setBytes(res.getString(3).getBytes());
                 file.setIntegrityHash(res.getString(4));
+                file.setDigitalSigned(res.getString(5));
                 files.add(file);
             }
 
@@ -260,8 +261,7 @@ public class DigitalSignerService {
                     ValueSQL.get(file.getName(), Types.VARCHAR),
                     ValueSQL.get(file.getBytes(), Types.BLOB),
                     ValueSQL.get(file.getIntegrityHash(), Types.VARCHAR),
-                    ValueSQL.get(userId, Types.INTEGER),
-                    ValueSQL.get(file.isSigned(), Types.BOOLEAN));
+                    ValueSQL.get(userId, Types.INTEGER));
         }
         logger.log(INFO, Constant.END, Constant.ADD_FILES );
     }
