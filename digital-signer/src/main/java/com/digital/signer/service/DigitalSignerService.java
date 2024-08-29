@@ -2,10 +2,7 @@ package com.digital.signer.service;
 
 import com.digital.signer.constant.Constant;
 import com.digital.signer.constant.SQLConstant;
-import com.digital.signer.dto.files.FileDTO;
-import com.digital.signer.dto.files.ListFilesDTO;
-import com.digital.signer.dto.files.AddFileDTO;
-import com.digital.signer.dto.files.SaveFilesResponseDTO;
+import com.digital.signer.dto.files.*;
 import com.digital.signer.dto.key.GenerateKeyDTO;
 import com.digital.signer.dto.transversal.ErrorDTO;
 import com.digital.signer.dto.user.CreateUserRequestDTO;
@@ -206,7 +203,7 @@ public class DigitalSignerService {
             CerrarRecursosJDBC.closeResultSet(res);
             CerrarRecursosJDBC.closePreparedStatement(pst);
         }
-        logger.log(INFO, Constant.END, Constant.LIST_FILES + response);
+        //logger.log(INFO, Constant.END, Constant.LIST_FILES + response);
         return response;
     }
 
@@ -264,4 +261,50 @@ public class DigitalSignerService {
         }
         logger.log(INFO, Constant.END, Constant.ADD_FILES );
     }
+
+    public SignedFileResponseDTO signedFile(HttpServletRequest request, SignedFileDTO signedFileDTO) {
+
+        logger.log(INFO, Constant.START, Constant.SIGNED_FILE);
+
+        SignedFileResponseDTO response = new SignedFileResponseDTO();
+        ErrorDTO error = new ErrorDTO();
+        error.setErrorCode(Constant.ERROR_CODE_403);
+        error.setErrorMessage(Constant.ERROR_MESSAGE_403);
+        response.setError(error);
+
+        String authHeader = request.getHeader("Authorization");
+        String token = null;
+        String userId = null;
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+            userId = jwtUtil.extractUserId(token);
+        }
+
+        if (userId == null || !jwtUtil.validateToken(token)) {
+            throw new RuntimeException("Invalid JWT Token");
+        }
+
+        try (Connection connection = this.dsDigitalSigner.getConnection()) {
+
+            if(UtilJDBC.exists(connection, SQLConstant.EXIST_FILE,
+                    ValueSQL.get(signedFileDTO.getIdFile(), Types.INTEGER))){
+
+                UtilJDBC.insertUpdate(connection,SQLConstant.USER_DIGITAL_SIGNED,
+                        ValueSQL.get("firmado", Types.VARCHAR),
+                        ValueSQL.get(signedFileDTO.getIdFile(), Types.INTEGER));
+
+                error.setErrorCode(Constant.ERROR_CODE_200);
+                error.setErrorMessage(Constant.ERROR_MESSAGE_200);
+                response.setError(error);
+            }
+
+
+        } catch (Exception e) {
+            logger.log(SEVERE, Constant.END, Constant.SING_IN + e.getMessage());
+        }
+        logger.log(INFO, Constant.END, Constant.SIGNED_FILE + response);
+        return response;
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.digital.signer.controller;
 
+import com.digital.signer.dto.files.SignedFileDTO;
 import com.digital.signer.dto.user.CreateUserRequestDTO;
 import com.digital.signer.dto.user.SingInRequestDTO;
 import com.digital.signer.service.DigitalSignerService;
@@ -71,4 +72,16 @@ public class DigitalSignerController {
             return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".saveFiles ", e.getMessage());
         }
     }
+
+    @PostMapping("/user/signedFile")
+    public ResponseEntity<Object> signedFile(HttpServletRequest request, @ModelAttribute SignedFileDTO signedFileDTO) {
+        try {
+            return Util.getResponseSuccessful(this.digitalSignerService.signedFile(request, signedFileDTO));
+        } catch (Exception e) {
+            return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".saveFiles ", e.getMessage());
+        }
+    }
+
+
+
 }

@@ -3,6 +3,7 @@ package com.digital.signer.util;
 import com.digital.signer.common.MensajeRespuestaHTTP;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -771,8 +772,10 @@ public static void decryptFileBin(String inputFilePath, String outputFilePath, P
 			  System.out.println("|");
 			}
 	}
-	
-	public class Base64 {
+
+
+
+    public class Base64 {
 		public static String encode(byte[] raw) {
 			StringBuffer encoded = new StringBuffer();
 

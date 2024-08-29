@@ -13,6 +13,11 @@ public class SQLConstant {
     public static final String SELECT_USER_FILES = "SELECT id, \"name\", bytes, integrity_hash, user_ds_id, digital_signed " +
             "FROM public.file WHERE user_ds_id = ?";
 
+    public static final String EXIST_FILE = "SELECT EXISTS (SELECT 1 FROM public.file WHERE id = ?)";
+
+    public static final String USER_DIGITAL_SIGNED = "UPDATE public.file SET digital_signed = ? " +
+            "WHERE id = ?;";
+
     public static final String ADD_FILE = "INSERT INTO public.file " +
             "(\"name\", bytes, integrity_hash, user_ds_id) " +
             "VALUES(?, ?, ?, ?)";

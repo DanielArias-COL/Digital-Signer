@@ -18,6 +18,8 @@ public class Constant {
 
     public static final String SAVE_FILES = "saveFiles ";
 
+    public static final String SIGNED_FILE = "SignedFile ";
+
     /** Error list */
     public static final String ERROR_CODE_200 = "200";
     public static final String ERROR_MESSAGE_200 = "Successful process";
