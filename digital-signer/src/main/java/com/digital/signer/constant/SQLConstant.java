@@ -24,4 +24,9 @@ public class SQLConstant {
             "(\"name\", bytes, integrity_hash, user_ds_id) " +
             "VALUES(?, ?, ?, ?)";
 
+    public static final String SELECT_CONFIRM_FILE = "SELECT integrity_hash, digital_signed, bytes, k.\"key\" FROM public.file f " +
+            "JOIN public.user_key uk on uk.id_user = ? " +
+            "JOIN public.\"key\" k on k.id = uk.id_key " +
+            "WHERE f.id = ?";
+
 }

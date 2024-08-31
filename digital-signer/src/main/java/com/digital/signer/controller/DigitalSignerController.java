@@ -1,6 +1,7 @@
 package com.digital.signer.controller;
 
 import com.digital.signer.dto.files.SignedFileDTO;
+import com.digital.signer.dto.files.VerifyFileRequestDTO;
 import com.digital.signer.dto.user.CreateUserRequestDTO;
 import com.digital.signer.dto.user.SingInRequestDTO;
 import com.digital.signer.service.DigitalSignerService;
@@ -76,6 +77,15 @@ public class DigitalSignerController {
             return Util.getResponseSuccessful(this.digitalSignerService.signedFile(request, signedFileDTO));
         } catch (Exception e) {
             return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".signedFile ", e.getMessage());
+        }
+    }
+
+    @PostMapping("/user/verifyFile")
+    public ResponseEntity<Object> verifyFile(HttpServletRequest request, @RequestBody VerifyFileRequestDTO verifyFileRequestDTO) {
+        try {
+            return Util.getResponseSuccessful(this.digitalSignerService.verifyFile(request, verifyFileRequestDTO));
+        } catch (Exception e) {
+            return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".verifyFile ", e.getMessage());
         }
     }
 

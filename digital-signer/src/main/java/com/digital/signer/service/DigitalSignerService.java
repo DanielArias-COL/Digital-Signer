@@ -26,6 +26,7 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -296,7 +297,7 @@ public class DigitalSignerService {
                     ValueSQL.get(signedFileDTO.getIdFile(), Types.INTEGER))) {
 
                 UtilJDBC.insertUpdate(connection,SQLConstant.USER_DIGITAL_SIGNED,
-                        ValueSQL.get(signedHash(signedFileDTO), Types.VARCHAR),
+                        ValueSQL.get(getSignedHash(signedFileDTO.getIdFile(), signedFileDTO.getPrivateKeyFile().getBytes()), Types.VARCHAR),
                         ValueSQL.get(signedFileDTO.getIdFile(), Types.INTEGER));
 
                 error.setErrorCode(Constant.ERROR_CODE_200);
@@ -311,12 +312,97 @@ public class DigitalSignerService {
         return response;
     }
 
-    private String signedHash(SignedFileDTO signedFileDTO) throws Exception {
+    public VerifyFileResponseDTO verifyFile(HttpServletRequest request, VerifyFileRequestDTO verifyFileRequestDTO) throws Exception {
+
+        logger.log(INFO, Constant.START, Constant.VERIFY_FILE);
+
+        VerifyFileResponseDTO response = new VerifyFileResponseDTO();
+        ErrorDTO error = new ErrorDTO();
+        error.setErrorCode(Constant.ERROR_CODE_405);
+        error.setErrorMessage(Constant.ERROR_MESSAGE_405);
+        response.setError(error);
+
+        String authHeader = request.getHeader("Authorization");
+        String token = null;
+        String userId = null;
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+            userId = jwtUtil.extractUserId(token);
+        }
+
+        if (userId == null || !jwtUtil.validateToken(token)) {
+            throw new RuntimeException("Invalid JWT Token");
+        }
+
+        PreparedStatement pst = null;
+        ResultSet res = null;
+        try (Connection connection = this.dsDigitalSigner.getConnection()) {
+
+            pst = connection.prepareStatement(SQLConstant.SELECT_CONFIRM_FILE);
+            pst.setInt(1, Integer.parseInt(userId));
+            pst.setInt(2, verifyFileRequestDTO.getIdFile());
+
+            res = pst.executeQuery();
+
+            if (res.next()) {
+                String integrityHash = res.getString(1);
+                String digitalSigned = res.getString(2);
+                byte fileBytes[] = res.getBytes(3);
+                String publicKey = res.getString(4);
+
+                String integrityConfirmHash = Util.getHash(fileBytes, "SHA-256");
+
+                if (!integrityConfirmHash.equals(integrityHash)) {
+                    error.setErrorCode(Constant.ERROR_CODE_406);
+                    error.setErrorMessage(Constant.ERROR_MESSAGE_406);
+                    response.setError(error);
+                    return response;
+                }
+
+                if (Util.isNull(digitalSigned)) {
+                    error.setErrorCode(Constant.ERROR_CODE_407);
+                    error.setErrorMessage(Constant.ERROR_MESSAGE_407);
+                    response.setError(error);
+                    return response;
+                }
+
+                try {
+                    String decodeSignedHash = decodeSingFile(digitalSigned, publicKey);
+                    String signedConfirmHash= getSignedHash(verifyFileRequestDTO.getIdFile(), fileBytes);
+
+                    if (!Util.isNull(decodeSignedHash)
+                            && decodeSignedHash.equals(signedConfirmHash)) {
+                        error.setErrorCode(Constant.ERROR_CODE_200);
+                        error.setErrorMessage(Constant.ERROR_MESSAGE_200);
+                        response.setError(error);
+                        return response;
+                    }
+                } catch (Exception e) {
+                    error.setErrorCode(Constant.ERROR_CODE_408);
+                    error.setErrorMessage(Constant.ERROR_MESSAGE_408);
+                    response.setError(error);
+                    return response;
+                }
+
+            }
+
+        } catch (Exception e) {
+            logger.log(SEVERE, Constant.END, Constant.VERIFY_FILE + e.getMessage());
+        } finally {
+            CerrarRecursosJDBC.closeResultSet(res);
+            CerrarRecursosJDBC.closePreparedStatement(pst);
+            logger.log(INFO, Constant.END, Constant.VERIFY_FILE + response);
+        }
+        return response;
+    }
+
+    private String getSignedHash(Integer idFile, byte[] bytes) throws Exception {
 
         PreparedStatement pst = null;
         ResultSet res = null;
 
-        String privateKeyBytes = Util.decodeKeyDto(signedFileDTO.getPrivateKeyFile().getBytes());
+        String privateKeyBytes = Util.decodeKeyDto(bytes);
         PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(Base64.decode(privateKeyBytes));
         KeyFactory kf = KeyFactory.getInstance("RSA");
         PrivateKey privateKey = kf.generatePrivate(spec);
@@ -325,7 +411,7 @@ public class DigitalSignerService {
         try (Connection connection = this.dsDigitalSigner.getConnection()) {
 
             pst = connection.prepareStatement(SQLConstant.SELECT_FILE);
-            pst.setInt(1, signedFileDTO.getIdFile());
+            pst.setInt(1, idFile);
             res = pst.executeQuery();
 
             if(res.next()){
@@ -342,6 +428,20 @@ public class DigitalSignerService {
             CerrarRecursosJDBC.closePreparedStatement(pst);
         }
         return Base64.encode(byteEncrypted);
+    }
 
+    private String decodeSingFile(String singHash, String publicKeyStr) throws Exception {
+
+        PreparedStatement pst = null;
+        ResultSet res = null;
+
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(Base64.decode(publicKeyStr));
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        PublicKey publicKey = kf.generatePublic(spec);
+
+        byte[] hashBytes = Util.hexStringToByteArray(singHash);
+
+        byte[] byteEncrypted = Util.decrypBlockByte(hashBytes, publicKey);
+        return Base64.encode(byteEncrypted);
     }
 }

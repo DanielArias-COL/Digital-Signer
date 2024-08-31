@@ -13,11 +13,26 @@ import java.security.*;
 
 public class Util {
 
-    private static PublicKeyCipher cipherClass;
+    public static PublicKeyCipher cipherClass;
+
+    static {
+        try {
+            cipherClass = PublicKeyCipher.getInstance();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static boolean isNull(String valor) {
+        return valor == null || valor.trim().length() == 0;
+    }
 
     public static byte[] encrypBlockByte(byte[] input, Key key) throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, NoSuchAlgorithmException {
-        cipherClass = new PublicKeyCipher("RSA");
         return cipherClass.encrypBlockByte(input, key);
+    }
+
+    public static byte[] decrypBlockByte(byte[] input, Key key) throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, NoSuchAlgorithmException {
+        return cipherClass.decrypBlockByte(input, key);
     }
 
     public static ResponseEntity<Object> getResponseSuccessful(Object body) {
