@@ -61,7 +61,8 @@ public class DigitalSignerService {
             Long idUser = UtilJDBC.insertReturningID(connection,
                     SQLConstant.SAVE_USER,
                     ValueSQL.get(user.getUser(), Types.VARCHAR),
-                    ValueSQL.get(user.getPassword(), Types.VARCHAR));
+                    ValueSQL.get(user.getPassword(), Types.VARCHAR),
+                    ValueSQL.get(user.getEmail(), Types.VARCHAR));
             user.setId(idUser);
         } catch (Exception e) {
             logger.log(SEVERE, Constant.END, Constant.CREATE_USER + e.getMessage());

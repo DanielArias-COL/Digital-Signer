@@ -20,4 +20,6 @@ public class CreateUserRequestDTO implements Serializable {
     private String user;
 
     private String password;
+
+    private String email;
 }
