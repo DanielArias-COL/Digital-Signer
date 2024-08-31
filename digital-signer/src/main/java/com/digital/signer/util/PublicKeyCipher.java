@@ -1,14 +1,13 @@
 package com.digital.signer.util;
 
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.Key;
-import java.security.NoSuchAlgorithmException;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
 
 
 public class PublicKeyCipher {
@@ -16,9 +15,7 @@ public class PublicKeyCipher {
     private Cipher cipher;
 
     public PublicKeyCipher (String algorithm) throws NoSuchAlgorithmException, NoSuchPaddingException {
-
         setCipher(Cipher.getInstance(algorithm));
-
     }
     public byte[] encrypBlockByte( byte[] input, Key key) throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         cipher.init(Cipher.ENCRYPT_MODE, key);

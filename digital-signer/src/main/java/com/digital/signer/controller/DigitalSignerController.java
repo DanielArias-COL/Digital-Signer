@@ -4,7 +4,6 @@ import com.digital.signer.dto.files.SignedFileDTO;
 import com.digital.signer.dto.user.CreateUserRequestDTO;
 import com.digital.signer.dto.user.SingInRequestDTO;
 import com.digital.signer.service.DigitalSignerService;
-import com.digital.signer.util.JwtUtil;
 import com.digital.signer.util.Util;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,10 +75,8 @@ public class DigitalSignerController {
         try {
             return Util.getResponseSuccessful(this.digitalSignerService.signedFile(request, signedFileDTO));
         } catch (Exception e) {
-            return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".saveFiles ", e.getMessage());
+            return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".signedFile ", e.getMessage());
         }
     }
-
-
 
 }

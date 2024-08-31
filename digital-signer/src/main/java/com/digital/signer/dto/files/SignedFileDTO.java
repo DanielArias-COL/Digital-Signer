@@ -1,6 +1,5 @@
 package com.digital.signer.dto.files;
 
-import com.digital.signer.dto.transversal.ErrorDTO;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -18,8 +17,5 @@ public class SignedFileDTO implements Serializable {
 
     private Integer idFile;
 
-    private MultipartFile privateKey;
-
-    private ErrorDTO error;
-
+    private MultipartFile privateKeyFile;
 }

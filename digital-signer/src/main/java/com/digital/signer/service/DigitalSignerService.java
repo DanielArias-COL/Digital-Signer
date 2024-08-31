@@ -11,6 +11,7 @@ import com.digital.signer.dto.user.SingInResponseDTO;
 import com.digital.signer.jdbc.CerrarRecursosJDBC;
 import com.digital.signer.jdbc.UtilJDBC;
 import com.digital.signer.jdbc.ValueSQL;
+import com.digital.signer.util.Base64;
 import com.digital.signer.util.JwtUtil;
 import com.digital.signer.util.Util;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,9 +21,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.sql.DataSource;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -85,6 +88,7 @@ public class DigitalSignerService {
         }
 
         try (Connection connection = this.dsDigitalSigner.getConnection()) {
+
             KeyPair keyPair = Util.generateKeyPair("RSA", 1024);
             PrivateKey privateKey = keyPair.getPrivate();
             PublicKey publicKey = keyPair.getPublic();
@@ -95,8 +99,9 @@ public class DigitalSignerService {
 
             UtilJDBC.insertUpdate(connection,
                     SQLConstant.SAVE_USER_KEY,
-                    ValueSQL.get(userId, Types.INTEGER),
+                    ValueSQL.get(Integer.parseInt(userId), Types.INTEGER),
                     ValueSQL.get(idKey.intValue(), Types.INTEGER));
+
 
             response.setKey(privateKey.getEncoded());
         } catch (Exception e) {
@@ -203,7 +208,7 @@ public class DigitalSignerService {
             CerrarRecursosJDBC.closeResultSet(res);
             CerrarRecursosJDBC.closePreparedStatement(pst);
         }
-        //logger.log(INFO, Constant.END, Constant.LIST_FILES + response);
+        logger.log(INFO, Constant.END, Constant.LIST_FILES + response.getError());
         return response;
     }
 
@@ -288,17 +293,16 @@ public class DigitalSignerService {
         try (Connection connection = this.dsDigitalSigner.getConnection()) {
 
             if(UtilJDBC.exists(connection, SQLConstant.EXIST_FILE,
-                    ValueSQL.get(signedFileDTO.getIdFile(), Types.INTEGER))){
+                    ValueSQL.get(signedFileDTO.getIdFile(), Types.INTEGER))) {
 
                 UtilJDBC.insertUpdate(connection,SQLConstant.USER_DIGITAL_SIGNED,
-                        ValueSQL.get("firmado", Types.VARCHAR),
+                        ValueSQL.get(signedHash(signedFileDTO), Types.VARCHAR),
                         ValueSQL.get(signedFileDTO.getIdFile(), Types.INTEGER));
 
                 error.setErrorCode(Constant.ERROR_CODE_200);
                 error.setErrorMessage(Constant.ERROR_MESSAGE_200);
                 response.setError(error);
             }
-
 
         } catch (Exception e) {
             logger.log(SEVERE, Constant.END, Constant.SING_IN + e.getMessage());
@@ -307,4 +311,37 @@ public class DigitalSignerService {
         return response;
     }
 
+    private String signedHash(SignedFileDTO signedFileDTO) throws Exception {
+
+        PreparedStatement pst = null;
+        ResultSet res = null;
+
+        String privateKeyBytes = Util.decodeKeyDto(signedFileDTO.getPrivateKeyFile().getBytes());
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(Base64.decode(privateKeyBytes));
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        PrivateKey privateKey = kf.generatePrivate(spec);
+
+        byte[] byteEncrypted = null;
+        try (Connection connection = this.dsDigitalSigner.getConnection()) {
+
+            pst = connection.prepareStatement(SQLConstant.SELECT_FILE);
+            pst.setInt(1, signedFileDTO.getIdFile());
+            res = pst.executeQuery();
+
+            if(res.next()){
+                String hash = res.getString(1);
+
+                byte[] hashBytes = Util.hexStringToByteArray(hash);
+                byteEncrypted = Util.encrypBlockByte(hashBytes, privateKey);
+            }
+
+        } catch (Exception e) {
+            logger.log(SEVERE, Constant.END, Constant.LIST_FILES + e.getMessage());
+        } finally {
+            CerrarRecursosJDBC.closeResultSet(res);
+            CerrarRecursosJDBC.closePreparedStatement(pst);
+        }
+        return Base64.encode(byteEncrypted);
+
+    }
 }
