@@ -5,9 +5,7 @@ import com.digital.signer.constant.SQLConstant;
 import com.digital.signer.dto.files.*;
 import com.digital.signer.dto.key.GenerateKeyDTO;
 import com.digital.signer.dto.transversal.ErrorDTO;
-import com.digital.signer.dto.user.CreateUserRequestDTO;
-import com.digital.signer.dto.user.SingInRequestDTO;
-import com.digital.signer.dto.user.SingInResponseDTO;
+import com.digital.signer.dto.user.*;
 import com.digital.signer.jdbc.CerrarRecursosJDBC;
 import com.digital.signer.jdbc.UtilJDBC;
 import com.digital.signer.jdbc.ValueSQL;
@@ -394,6 +392,97 @@ public class DigitalSignerService {
             CerrarRecursosJDBC.closeResultSet(res);
             CerrarRecursosJDBC.closePreparedStatement(pst);
             logger.log(INFO, Constant.END, Constant.VERIFY_FILE + response);
+        }
+        return response;
+    }
+
+    public ShareFileResponseDTO shareFile(HttpServletRequest request, ShareFileRequestDTO shareFileRequestDTO) {
+
+        logger.log(INFO, Constant.START, Constant.SHARE_FILE);
+
+        ShareFileResponseDTO response = new ShareFileResponseDTO();
+        ErrorDTO error = new ErrorDTO();
+        error.setErrorCode(Constant.ERROR_CODE_409);
+        error.setErrorMessage(Constant.ERROR_MESSAGE_409);
+        response.setError(error);
+
+        String authHeader = request.getHeader("Authorization");
+        String token = null;
+        String userId = null;
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+            userId = jwtUtil.extractUserId(token);
+        }
+
+        if (userId == null || !jwtUtil.validateToken(token)) {
+            throw new RuntimeException("Invalid JWT Token");
+        }
+
+        try (Connection connection = this.dsDigitalSigner.getConnection()) {
+            UtilJDBC.insertUpdate(connection,SQLConstant.SAVE_SHARE_FILE,
+                    ValueSQL.get(userId, Types.INTEGER),
+                    ValueSQL.get(shareFileRequestDTO.getIdUserTarget(), Types.INTEGER),
+                    ValueSQL.get(shareFileRequestDTO.getIdFile(), Types.INTEGER));
+        } catch (Exception e) {
+            logger.log(SEVERE, Constant.END, Constant.SHARE_FILE + e.getMessage());
+        }
+        logger.log(INFO, Constant.END, Constant.SHARE_FILE + response);
+        return response;
+    }
+
+    public ListShareUsersResponseDTO listShareUsers(HttpServletRequest request) throws Exception {
+
+        logger.log(INFO, Constant.START, Constant.LIST_SHARE_USERS);
+
+        ListShareUsersResponseDTO response = new ListShareUsersResponseDTO();
+        ErrorDTO error = new ErrorDTO();
+        error.setErrorCode(Constant.ERROR_CODE_410);
+        error.setErrorMessage(Constant.ERROR_MESSAGE_410);
+        response.setError(error);
+        List<UserDTO> users = new ArrayList<>();
+
+        String authHeader = request.getHeader("Authorization");
+        String token = null;
+        String userId = null;
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+            userId = jwtUtil.extractUserId(token);
+        }
+
+        if (userId == null || !jwtUtil.validateToken(token)) {
+            throw new RuntimeException("Invalid JWT Token");
+        }
+
+        PreparedStatement pst = null;
+        ResultSet res = null;
+        try (Connection connection = this.dsDigitalSigner.getConnection()) {
+
+            pst = connection.prepareStatement(SQLConstant.SELECT_SHARE_USERS);
+            res = pst.executeQuery();
+
+            UserDTO user;
+            while (res.next()) {
+                Integer idUser = res.getInt(1);
+
+                if (Integer.parseInt(userId) != idUser) {
+                    user = new UserDTO();
+                    user.setId(idUser);
+                    user.setEmail(res.getString(2));
+                    users.add(user);
+                }
+            }
+
+            error.setErrorCode(Constant.ERROR_CODE_200);
+            error.setErrorMessage(Constant.ERROR_MESSAGE_200);
+            response.setError(error);
+        } catch (Exception e) {
+            logger.log(SEVERE, Constant.END, Constant.LIST_SHARE_USERS + e.getMessage());
+        } finally {
+            CerrarRecursosJDBC.closeResultSet(res);
+            CerrarRecursosJDBC.closePreparedStatement(pst);
+            logger.log(INFO, Constant.END, Constant.LIST_SHARE_USERS + response);
         }
         return response;
     }

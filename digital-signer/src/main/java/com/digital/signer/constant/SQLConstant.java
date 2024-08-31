@@ -29,4 +29,8 @@ public class SQLConstant {
             "JOIN public.\"key\" k on k.id = uk.id_key " +
             "WHERE f.id = ?";
 
+    public static final String SAVE_SHARE_FILE = "INSERT INTO public.file_share (id_user_source, id_user_target, id_file) VALUES(?, ?, ?)";
+
+    public static final String SELECT_SHARE_USERS = "SELECT id, email FROM user_ds ud";
+
 }

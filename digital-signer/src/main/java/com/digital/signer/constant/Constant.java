@@ -22,6 +22,10 @@ public class Constant {
 
     public static final String VERIFY_FILE = "verifyFile ";
 
+    public static final String SHARE_FILE = "shareFile ";
+
+    public static final String LIST_SHARE_USERS = "shareFile ";
+
     /** Error list */
     public static final String ERROR_CODE_200 = "200";
     public static final String ERROR_MESSAGE_200 = "Successful process";
@@ -46,5 +50,11 @@ public class Constant {
 
     public static final String ERROR_CODE_408 = "408";
     public static final String ERROR_MESSAGE_408 = "File signature does not match";
+
+    public static final String ERROR_CODE_409 = "409";
+    public static final String ERROR_MESSAGE_409 = "Error sharing files";
+
+    public static final String ERROR_CODE_410 = "410";
+    public static final String ERROR_MESSAGE_410 = "Error getting user to share file";
 
 }
