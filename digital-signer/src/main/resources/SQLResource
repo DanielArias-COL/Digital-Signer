@@ -10,6 +10,7 @@ CREATE TABLE public.user_ds (
 	id int8 NOT NULL DEFAULT nextval('id_user_seq'::regclass),
 	username varchar NOT NULL,
 	"password" varchar NOT NULL,
+	email varchar NULL,
 	CONSTRAINT user_ds_pk PRIMARY KEY (id)
 );
 
@@ -54,3 +55,24 @@ CREATE TABLE public.file (
 );
 
 ALTER TABLE public.file ADD CONSTRAINT file_user_ds_fk FOREIGN KEY (id) REFERENCES public.user_ds(id);
+
+CREATE SEQUENCE public.id_file_share_seq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 9223372036854775807
+	START 1
+	CACHE 1
+	NO CYCLE;
+
+CREATE TABLE public.file_share (
+	id int8 NOT NULL DEFAULT 'id_file_share_seq'::regclass,
+	id_user_source int8 NOT NULL,
+	id_user_target int8 NOT NULL,
+	id_file int8 NOT NULL,
+	digital_signer_target varchar NULL,
+	CONSTRAINT file_share_pk PRIMARY KEY (id)
+);
+
+ALTER TABLE public.file_share ADD CONSTRAINT file_share_fk FOREIGN KEY (id_file) REFERENCES public.file(id);
+ALTER TABLE public.file_share ADD CONSTRAINT source_file_share_fk FOREIGN KEY (id_user_source) REFERENCES public.user_ds(id);
+ALTER TABLE public.file_share ADD CONSTRAINT target_file_share_fk FOREIGN KEY (id_user_target) REFERENCES public.user_ds(id);
