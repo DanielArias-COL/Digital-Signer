@@ -463,7 +463,7 @@ public class DigitalSignerService {
 
             UserDTO user;
             while (res.next()) {
-                Integer idUser = res.getInt(1);
+                int idUser = res.getInt(1);
 
                 if (Integer.parseInt(userId) != idUser) {
                     user = new UserDTO();
