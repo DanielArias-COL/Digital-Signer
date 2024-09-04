@@ -347,7 +347,7 @@ public class DigitalSignerService {
             if (res.next()) {
                 String integrityHash = res.getString(1);
                 String digitalSigned = res.getString(2);
-                byte fileBytes[] = res.getBytes(3);
+                byte[] fileBytes = res.getBytes(3);
                 String publicKey = res.getString(4);
 
                 String integrityConfirmHash = Util.getHash(fileBytes, "SHA-256");
@@ -368,10 +368,9 @@ public class DigitalSignerService {
 
                 try {
                     String decodeSignedHash = decodeSingFile(digitalSigned, publicKey);
-                    String signedConfirmHash= getSignedHash(verifyFileRequestDTO.getIdFile(), fileBytes);
 
                     if (!Util.isNull(decodeSignedHash)
-                            && decodeSignedHash.equals(signedConfirmHash)) {
+                            && decodeSignedHash.equals(integrityHash)) {
                         error.setErrorCode(Constant.ERROR_CODE_200);
                         error.setErrorMessage(Constant.ERROR_MESSAGE_200);
                         response.setError(error);
@@ -473,10 +472,10 @@ public class DigitalSignerService {
                     users.add(user);
                 }
             }
-
             error.setErrorCode(Constant.ERROR_CODE_200);
             error.setErrorMessage(Constant.ERROR_MESSAGE_200);
             response.setError(error);
+            response.setUsers(users);
         } catch (Exception e) {
             logger.log(SEVERE, Constant.END, Constant.LIST_SHARE_USERS + e.getMessage());
         } finally {
@@ -507,7 +506,7 @@ public class DigitalSignerService {
             if(res.next()){
                 String hash = res.getString(1);
 
-                byte[] hashBytes = Util.hexStringToByteArray(hash);
+                byte[] hashBytes = Base64.decode(hash);
                 byteEncrypted = Util.encrypBlockByte(hashBytes, privateKey);
             }
 
@@ -522,14 +521,11 @@ public class DigitalSignerService {
 
     private String decodeSingFile(String singHash, String publicKeyStr) throws Exception {
 
-        PreparedStatement pst = null;
-        ResultSet res = null;
-
         X509EncodedKeySpec spec = new X509EncodedKeySpec(Base64.decode(publicKeyStr));
         KeyFactory kf = KeyFactory.getInstance("RSA");
         PublicKey publicKey = kf.generatePublic(spec);
 
-        byte[] hashBytes = Util.hexStringToByteArray(singHash);
+        byte[] hashBytes = Base64.decode(singHash);
 
         byte[] byteEncrypted = Util.decrypBlockByte(hashBytes, publicKey);
         return Base64.encode(byteEncrypted);

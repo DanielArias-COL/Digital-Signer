@@ -99,7 +99,7 @@ public class DigitalSignerController {
         }
     }
 
-    @PostMapping("/user/listShareUsers")
+    @GetMapping("/user/listShareUsers")
     public ResponseEntity<Object> listShareUsers(HttpServletRequest request) {
         try {
             return Util.getResponseSuccessful(this.digitalSignerService.listShareUsers(request));

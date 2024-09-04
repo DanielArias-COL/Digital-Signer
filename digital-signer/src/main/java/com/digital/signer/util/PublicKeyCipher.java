@@ -15,7 +15,7 @@ public class PublicKeyCipher {
     private Cipher cipher;
 
     private PublicKeyCipher() throws NoSuchAlgorithmException, NoSuchPaddingException {
-        cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher = Cipher.getInstance("RSA");
     }
 
     public static synchronized PublicKeyCipher getInstance() throws NoSuchAlgorithmException, NoSuchPaddingException {
