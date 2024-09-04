@@ -420,9 +420,13 @@ public class DigitalSignerService {
 
         try (Connection connection = this.dsDigitalSigner.getConnection()) {
             UtilJDBC.insertUpdate(connection,SQLConstant.SAVE_SHARE_FILE,
-                    ValueSQL.get(userId, Types.INTEGER),
+                    ValueSQL.get(Integer.parseInt(userId), Types.INTEGER),
                     ValueSQL.get(shareFileRequestDTO.getIdUserTarget(), Types.INTEGER),
                     ValueSQL.get(shareFileRequestDTO.getIdFile(), Types.INTEGER));
+
+            error.setErrorCode(Constant.ERROR_CODE_200);
+            error.setErrorMessage(Constant.ERROR_MESSAGE_200);
+            response.setError(error);
         } catch (Exception e) {
             logger.log(SEVERE, Constant.END, Constant.SHARE_FILE + e.getMessage());
         }
