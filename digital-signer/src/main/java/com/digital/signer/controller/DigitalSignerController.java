@@ -4,6 +4,7 @@ import com.digital.signer.dto.files.ShareFileRequestDTO;
 import com.digital.signer.dto.files.SignedFileDTO;
 import com.digital.signer.dto.files.VerifyFileRequestDTO;
 import com.digital.signer.dto.user.CreateUserRequestDTO;
+import com.digital.signer.dto.user.GoogleSingInRequestDTO;
 import com.digital.signer.dto.user.SingInRequestDTO;
 import com.digital.signer.service.DigitalSignerService;
 import com.digital.signer.util.Util;
@@ -51,6 +52,15 @@ public class DigitalSignerController {
             return Util.getResponseSuccessful(this.digitalSignerService.singIn(request));
         } catch (Exception e) {
             return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".singIn ", e.getMessage());
+        }
+    }
+
+    @PostMapping("/user/googleSingIn")
+    public ResponseEntity<Object> googleSingIn(@RequestBody() GoogleSingInRequestDTO request) {
+        try {
+            return Util.getResponseSuccessful(this.digitalSignerService.googleSingIn(request));
+        } catch (Exception e) {
+            return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".googleSingIn ", e.getMessage());
         }
     }
 

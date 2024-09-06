@@ -151,6 +151,45 @@ public class DigitalSignerService {
         return response;
     }
 
+    public SingInResponseDTO googleSingIn(GoogleSingInRequestDTO request) throws Exception {
+        logger.log(INFO, Constant.START, Constant.GOOGLE_SING_IN + request);
+
+        SingInResponseDTO response = new SingInResponseDTO();
+        ErrorDTO error = new ErrorDTO();
+        error.setErrorCode(Constant.ERROR_CODE_401);
+        error.setErrorMessage(Constant.ERROR_MESSAGE_401);
+        response.setError(error);
+
+        PreparedStatement pst = null;
+        ResultSet res = null;
+        try (Connection connection = this.dsDigitalSigner.getConnection()) {
+
+            pst = connection.prepareStatement(SQLConstant.SELECT_USER_GOOGLE_INFO);
+            pst.setString(1, request.getEmail());
+
+            res = pst.executeQuery();
+
+            if (res.next()) {
+                response.setId(res.getInt(1));
+
+                String jwtToken = jwtUtil.generateToken(response.getId());
+
+                response.setJwt(jwtToken);
+
+                error.setErrorCode(Constant.ERROR_CODE_200);
+                error.setErrorMessage(Constant.ERROR_MESSAGE_200);
+                response.setError(error);
+            }
+        } catch (Exception e) {
+            logger.log(SEVERE, Constant.END, Constant.GOOGLE_SING_IN + e.getMessage());
+        } finally {
+            CerrarRecursosJDBC.closeResultSet(res);
+            CerrarRecursosJDBC.closePreparedStatement(pst);
+        }
+        logger.log(INFO, Constant.END, Constant.GOOGLE_SING_IN + response);
+        return response;
+    }
+
     public ListFilesDTO listFiles(HttpServletRequest request) throws Exception {
         logger.log(INFO, Constant.START, Constant.LIST_FILES);
 

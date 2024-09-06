@@ -14,6 +14,8 @@ public class Constant {
 
     public static final String SING_IN = "singIn: ";
 
+    public static final String GOOGLE_SING_IN = "googleSingIn: ";
+
     public static final String LIST_FILES = "listFilesForUser ";
 
     public static final String SAVE_FILES = "saveFiles ";
