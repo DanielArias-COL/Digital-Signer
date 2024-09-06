@@ -293,7 +293,9 @@ public class DigitalSignerService {
                 file.setName(res.getString(2));
                 file.setBytes(res.getString(3).getBytes());
                 file.setIntegrityHash(res.getString(4));
-                file.setEmailUserSource(getUserEmail(res.getInt(5)));
+                Integer idUserSource = res.getInt(5);
+                file.setIdUserSource(idUserSource);
+                file.setEmailUserSource(getUserEmail(idUserSource));
                 file.setDigitalSigned(res.getString(6));
                 files.add(file);
             }

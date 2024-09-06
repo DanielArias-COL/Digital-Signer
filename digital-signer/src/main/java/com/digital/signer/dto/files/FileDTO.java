@@ -23,4 +23,5 @@ public class FileDTO implements  Serializable{
     private String digitalSigned;
     private String stateMessage;
     private String emailUserSource;
+    private Integer idUserSource;
 }
