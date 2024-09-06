@@ -15,6 +15,10 @@ public class SQLConstant {
     public static final String SELECT_USER_FILES = "SELECT id, \"name\", bytes, integrity_hash, user_ds_id, digital_signed " +
             "FROM public.file WHERE user_ds_id = ?";
 
+    public static final String SELECT_SHARE_FILES = "SELECT pf.id, \"name\", pf.bytes, pf.integrity_hash, pf.user_ds_id, fls.digital_signer_target FROM public.file_share fls " +
+            "JOIN public.file pf on pf.id = fls.id_file " +
+            "WHERE fls.id_user_target = ?";
+
     public static final String SELECT_FILE = "SELECT integrity_hash FROM public.file WHERE id = ?";
 
     public static final String EXIST_FILE = "SELECT EXISTS (SELECT 1 FROM public.file WHERE id = ?)";
@@ -34,5 +38,7 @@ public class SQLConstant {
     public static final String SAVE_SHARE_FILE = "INSERT INTO public.file_share (id_user_source, id_user_target, id_file) VALUES(?, ?, ?)";
 
     public static final String SELECT_SHARE_USERS = "SELECT id, email FROM user_ds ud";
+
+    public static final String SELECT_USER_EMAIL = "SELECT email FROM public.user_ds WHERE id = ?";
 
 }
