@@ -18,6 +18,8 @@ public class Constant {
 
     public static final String LIST_FILES = "listFilesForUser ";
 
+    public static final String LIST_SHARE_FILES = "listMySharesFile ";
+
     public static final String SAVE_FILES = "saveFiles ";
 
     public static final String SIGNED_FILE = "SignedFile ";

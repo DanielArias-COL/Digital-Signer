@@ -117,4 +117,13 @@ public class DigitalSignerController {
             return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".listShareUsers ", e.getMessage());
         }
     }
+
+    @GetMapping("/user/listMySharesFile")
+    public ResponseEntity<Object> listMySharesFile(HttpServletRequest request) {
+        try {
+            return Util.getResponseSuccessful(this.digitalSignerService.listMySharesFile(request));
+        } catch (Exception e) {
+            return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".listMySharesFile ", e.getMessage());
+        }
+    }
 }

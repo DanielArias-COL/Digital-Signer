@@ -251,6 +251,68 @@ public class DigitalSignerService {
         return response;
     }
 
+    public ListFilesDTO listMySharesFile(HttpServletRequest request) throws Exception {
+        logger.log(INFO, Constant.START, Constant.LIST_SHARE_FILES);
+
+        ListFilesDTO response = new ListFilesDTO();
+        List<FileDTO> files = new ArrayList<>();
+        ErrorDTO error = new ErrorDTO();
+        error.setErrorCode(Constant.ERROR_CODE_402);
+        error.setErrorMessage(Constant.ERROR_MESSAGE_402);
+        response.setError(error);
+
+        String authHeader = request.getHeader("Authorization");
+        String token = null;
+        String userId = null;
+
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+            userId = jwtUtil.extractUserId(token);
+        }
+
+        if (userId == null || !jwtUtil.validateToken(token)) {
+            throw new RuntimeException("Invalid JWT Token");
+        }
+
+        PreparedStatement pst = null;
+        ResultSet res = null;
+
+        try (Connection connection = this.dsDigitalSigner.getConnection()) {
+
+            pst = connection.prepareStatement(SQLConstant.SELECT_SHARE_FILES);
+            pst.setInt(1, Integer.parseInt(userId));
+            res = pst.executeQuery();
+
+            FileDTO file;
+            while (res.next()) {
+                file = new FileDTO();
+
+                file.setId(res.getInt(1));
+                file.setName(res.getString(2));
+                file.setBytes(res.getString(3).getBytes());
+                file.setIntegrityHash(res.getString(4));
+                file.setEmailUserSource(getUserEmail(res.getInt(5)));
+                file.setDigitalSigned(res.getString(6));
+                files.add(file);
+            }
+
+            if (!files.isEmpty()) {
+                error.setErrorCode(Constant.ERROR_CODE_200);
+                error.setErrorMessage(Constant.ERROR_MESSAGE_200);
+                response.setError(error);
+            }
+            response.setListFiles(files);
+        } catch (Exception e) {
+            logger.log(SEVERE, Constant.END, Constant.LIST_SHARE_FILES + e.getMessage());
+        } finally {
+            CerrarRecursosJDBC.closeResultSet(res);
+            CerrarRecursosJDBC.closePreparedStatement(pst);
+        }
+        logger.log(INFO, Constant.END, Constant.LIST_SHARE_FILES + response.getError());
+        return response;
+    }
+
     public SaveFilesResponseDTO saveFiles(HttpServletRequest request, MultipartFile[] files) {
         logger.log(INFO, Constant.START, Constant.SAVE_FILES);
 
@@ -568,5 +630,29 @@ public class DigitalSignerService {
 
         byte[] byteEncrypted = Util.decrypBlockByte(hashBytes, publicKey);
         return Base64.encode(byteEncrypted);
+    }
+
+    private String getUserEmail(Integer userId) throws Exception {
+
+        PreparedStatement pst = null;
+        ResultSet res = null;
+
+        try (Connection connection = this.dsDigitalSigner.getConnection()) {
+
+            pst = connection.prepareStatement(SQLConstant.SELECT_USER_EMAIL);
+            pst.setInt(1, userId);
+            res = pst.executeQuery();
+
+            if(res.next()){
+                return res.getString(1);
+            }
+
+        } catch (Exception e) {
+            logger.log(SEVERE, Constant.END, Constant.LIST_SHARE_FILES + e.getMessage());
+        } finally {
+            CerrarRecursosJDBC.closeResultSet(res);
+            CerrarRecursosJDBC.closePreparedStatement(pst);
+        }
+        return null;
     }
 }
