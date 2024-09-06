@@ -95,7 +95,7 @@ public class DigitalSignerService {
 
             Long idKey = UtilJDBC.insertReturningID(connection,
                     SQLConstant.SAVE_KEY,
-                    ValueSQL.get(Util.encodingPublicKeyBase64(publicKey.getEncoded()), Types.VARCHAR));
+                    ValueSQL.get(Base64.encode(publicKey.getEncoded()), Types.VARCHAR));
 
             UtilJDBC.insertUpdate(connection,
                     SQLConstant.SAVE_USER_KEY,
@@ -104,6 +104,9 @@ public class DigitalSignerService {
 
 
             response.setKey(privateKey.getEncoded());
+            //System.out.println("private key public: "+Util.encodingPublicKeyBase64(privateKey.getEncoded()));
+            //System.out.println("private key: "+Util.encodingPublicKeyBase64(privateKey.getEncoded()));
+
         } catch (Exception e) {
             logger.log(SEVERE, Constant.END, Constant.GENERATE_KEY_PAIR + e.getMessage());
         }
@@ -232,6 +235,7 @@ public class DigitalSignerService {
                 file.setBytes(res.getString(3).getBytes());
                 file.setIntegrityHash(res.getString(4));
                 file.setDigitalSigned(res.getString(6));
+                file.setStateMessage(fileState(Integer.valueOf(userId), file.getId()));
                 files.add(file);
             }
 
@@ -572,5 +576,62 @@ public class DigitalSignerService {
 
         byte[] byteEncrypted = Util.decrypBlockByte(hashBytes, publicKey);
         return Base64.encode(byteEncrypted);
+    }
+
+    private String fileState(Integer userId, Integer fileId ) throws Exception {
+
+        String response="";
+        PreparedStatement pst = null;
+        ResultSet res = null;
+        try (Connection connection = this.dsDigitalSigner.getConnection()) {
+
+            pst = connection.prepareStatement(SQLConstant.SELECT_CONFIRM_FILE);
+            pst.setInt(1, userId);
+            pst.setInt(2, fileId);
+
+            res = pst.executeQuery();
+
+            if (res.next()) {
+                String integrityHash = res.getString(1);
+                String digitalSigned = res.getString(2);
+                byte[] fileBytes = res.getBytes(3);
+                String publicKey = res.getString(4);
+
+                String integrityConfirmHash = Util.getHash(fileBytes, "SHA-256");
+
+                if (!integrityConfirmHash.equals(integrityHash)) {
+                    response = Constant.ERROR_STATE_406;
+                    return response;
+                }
+
+                //
+                if (Util.isNull(digitalSigned)) {
+                    response = Constant.ERROR_STATE_407;
+                    return response;
+                }
+
+                try {
+                    String decodeSignedHash = decodeSingFile(digitalSigned, publicKey);
+
+                    if (!Util.isNull(decodeSignedHash)
+                            && decodeSignedHash.equals(integrityHash)) {
+                        response = Constant.ERROR_STATE_200;
+                        return response;
+                    }
+                } catch (Exception e) {
+                    response = Constant.ERROR_STATE_408;
+                    return response;
+                }
+
+            }
+
+        } catch (Exception e) {
+            logger.log(SEVERE, Constant.END, Constant.VERIFY_FILE + e.getMessage());
+        } finally {
+            CerrarRecursosJDBC.closeResultSet(res);
+            CerrarRecursosJDBC.closePreparedStatement(pst);
+            logger.log(INFO, Constant.END, Constant.VERIFY_FILE + response);
+        }
+        return response;
     }
 }

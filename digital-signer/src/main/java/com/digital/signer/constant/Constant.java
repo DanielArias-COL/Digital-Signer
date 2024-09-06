@@ -46,8 +46,10 @@ public class Constant {
 
     public static final String ERROR_CODE_406 = "406";
     public static final String ERROR_MESSAGE_406 = "Error file has been modified";
+    public static final String ERROR_STATE_406 = "El archivo a sido modificado";
 
     public static final String ERROR_CODE_407 = "407";
+    public static final String ERROR_STATE_407 = "I-F";  //it have integrity but not signature
     public static final String ERROR_MESSAGE_407 = "The error file is correct, but the digital signature is missing";
 
     public static final String ERROR_CODE_408 = "408";
@@ -59,4 +61,6 @@ public class Constant {
     public static final String ERROR_CODE_410 = "410";
     public static final String ERROR_MESSAGE_410 = "Error getting user to share file";
 
+    public static final String ERROR_STATE_200 = "IFV"; //it have integrity It's Signature and It's Verified
+    public static final String ERROR_STATE_408 = "IF-V"; // it have integrity It's Signature but it is not verified
 }

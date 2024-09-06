@@ -21,5 +21,6 @@ public class FileDTO implements  Serializable{
     private byte [] bytes;
     private String integrityHash;
     private String digitalSigned;
+    private String stateMessage;
 
 }
