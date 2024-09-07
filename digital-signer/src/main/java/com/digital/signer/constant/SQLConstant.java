@@ -4,7 +4,7 @@ public class SQLConstant {
 
     public static final String SAVE_USER = "INSERT INTO public.user_ds (username, \"password\", email) VALUES(?, ?, ?) RETURNING id";
 
-    public static final String SAVE_KEY = "INSERT INTO public.\"key\" (\"key\") VALUES(?) RETURNING id";
+    public static final String SAVE_KEY = "INSERT INTO public.\"key\" (\"key\", is_public) VALUES(?, ?) RETURNING id";
 
     public static final String SAVE_USER_KEY = "INSERT INTO public.user_key (id_user, id_key) VALUES(?, ?)";
 
@@ -23,6 +23,12 @@ public class SQLConstant {
 
     public static final String EXIST_FILE = "SELECT EXISTS (SELECT 1 FROM public.file WHERE id = ?)";
 
+    public static final String EXIST_USER = "SELECT EXISTS (SELECT 1 FROM public.user_ds WHERE email = ?)";
+
+    public static final String EXIST_USER_KEY = "select \"key\" from public.user_key uk " +
+            "join public.\"key\" k on k.id = uk.id_key " +
+            "where id_user = ? and is_public = false";
+
     public static final String USER_DIGITAL_SIGNED = "UPDATE public.file SET digital_signed = ? " +
             "WHERE id = ?;";
 
@@ -35,7 +41,7 @@ public class SQLConstant {
     public static final String SELECT_CONFIRM_FILE = "SELECT integrity_hash, digital_signed, bytes, k.\"key\" FROM public.file f " +
             "JOIN public.user_key uk on uk.id_user = ? " +
             "JOIN public.\"key\" k on k.id = uk.id_key " +
-            "WHERE f.id = ?";
+            "WHERE f.id = ? and k.is_public = true";
 
     public static final String SAVE_SHARE_FILE = "INSERT INTO public.file_share (id_user_source, id_user_target, id_file) VALUES(?, ?, ?)";
 

@@ -10,6 +10,7 @@ import com.digital.signer.jdbc.CerrarRecursosJDBC;
 import com.digital.signer.jdbc.UtilJDBC;
 import com.digital.signer.jdbc.ValueSQL;
 import com.digital.signer.util.Base64;
+import com.digital.signer.util.BusinessException;
 import com.digital.signer.util.JwtUtil;
 import com.digital.signer.util.Util;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,10 +26,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Types;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -53,23 +51,40 @@ public class DigitalSignerService {
         this.jwtUtil=jwtUtil;
     }
 
-    public CreateUserRequestDTO createUser(CreateUserRequestDTO user) {
+    public CreateUserRequestDTO createUser(CreateUserRequestDTO user) throws Exception {
         logger.log(INFO, Constant.START, Constant.CREATE_USER + user);
+
         try (Connection connection = this.dsDigitalSigner.getConnection()) {
-            Long idUser = UtilJDBC.insertReturningID(connection,
-                    SQLConstant.SAVE_USER,
-                    ValueSQL.get(user.getUser(), Types.VARCHAR),
-                    ValueSQL.get(user.getPassword(), Types.VARCHAR),
-                    ValueSQL.get(user.getEmail(), Types.VARCHAR));
-            user.setId(idUser);
-        } catch (Exception e) {
+
+            if (!UtilJDBC.exists(connection, SQLConstant.EXIST_USER,
+                    ValueSQL.get(user.getEmail(), Types.VARCHAR))) {
+
+                Long idUser = UtilJDBC.insertReturningID(connection,
+                        SQLConstant.SAVE_USER,
+                        ValueSQL.get(user.getUser(), Types.VARCHAR),
+                        ValueSQL.get(user.getPassword(), Types.VARCHAR),
+                        ValueSQL.get(user.getEmail(), Types.VARCHAR));
+
+                user.setId(idUser);
+            } else {
+                throw new BusinessException("El usuario ya existe");
+            }
+
+        } catch (SQLException e) {
             logger.log(SEVERE, Constant.END, Constant.CREATE_USER + e.getMessage());
+            throw new RuntimeException("Error creando el usuario", e);
+
+        } catch (BusinessException e) {
+            logger.log(SEVERE, Constant.END, Constant.CREATE_USER + e.getMessage());
+            throw new BusinessException("El usuario ya existe");
+
         }
+
         logger.log(INFO, Constant.END, Constant.CREATE_USER + user);
         return user;
     }
 
-    public GenerateKeyDTO generateKeyPairForUser(HttpServletRequest request) {
+    public GenerateKeyDTO generateKeyPairForUser(HttpServletRequest request) throws Exception {
         logger.log(INFO, Constant.START, Constant.GENERATE_KEY_PAIR);
 
         GenerateKeyDTO response = new GenerateKeyDTO();
@@ -87,7 +102,19 @@ public class DigitalSignerService {
             throw new RuntimeException("Invalid JWT Token");
         }
 
+        PreparedStatement pst = null;
+        ResultSet res = null;
         try (Connection connection = this.dsDigitalSigner.getConnection()) {
+
+            pst = connection.prepareStatement(SQLConstant.EXIST_USER_KEY);
+            pst.setInt(1, Integer.valueOf(userId));
+
+            res = pst.executeQuery();
+
+            if (res.next()) {
+                response.setKey(Base64.decode(res.getString(1)));
+                return response;
+            }
 
             KeyPair keyPair = Util.generateKeyPair("RSA", 1024);
             PrivateKey privateKey = keyPair.getPrivate();
@@ -95,17 +122,31 @@ public class DigitalSignerService {
 
             Long idKey = UtilJDBC.insertReturningID(connection,
                     SQLConstant.SAVE_KEY,
-                    ValueSQL.get(Base64.encode(publicKey.getEncoded()), Types.VARCHAR));
+                    ValueSQL.get(Base64.encode(publicKey.getEncoded()), Types.VARCHAR),
+                    ValueSQL.get(Boolean.TRUE, Types.BOOLEAN));
+
+            Long idKeyPrivate = UtilJDBC.insertReturningID(connection,
+                    SQLConstant.SAVE_KEY,
+                    ValueSQL.get(Base64.encode(privateKey.getEncoded()), Types.VARCHAR),
+                    ValueSQL.get(Boolean.FALSE, Types.BOOLEAN));
 
             UtilJDBC.insertUpdate(connection,
                     SQLConstant.SAVE_USER_KEY,
                     ValueSQL.get(Integer.parseInt(userId), Types.INTEGER),
                     ValueSQL.get(idKey.intValue(), Types.INTEGER));
 
+            UtilJDBC.insertUpdate(connection,
+                    SQLConstant.SAVE_USER_KEY,
+                    ValueSQL.get(Integer.parseInt(userId), Types.INTEGER),
+                    ValueSQL.get(idKeyPrivate.intValue(), Types.INTEGER));
+
 
             response.setKey(privateKey.getEncoded());
         } catch (Exception e) {
             logger.log(SEVERE, Constant.END, Constant.GENERATE_KEY_PAIR + e.getMessage());
+        } finally {
+            CerrarRecursosJDBC.closeResultSet(res);
+            CerrarRecursosJDBC.closePreparedStatement(pst);
         }
         logger.log(INFO, Constant.END, Constant.GENERATE_KEY_PAIR + response);
         return response;

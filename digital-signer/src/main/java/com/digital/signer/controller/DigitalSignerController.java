@@ -8,6 +8,7 @@ import com.digital.signer.dto.user.CreateUserRequestDTO;
 import com.digital.signer.dto.user.GoogleSingInRequestDTO;
 import com.digital.signer.dto.user.SingInRequestDTO;
 import com.digital.signer.service.DigitalSignerService;
+import com.digital.signer.util.BusinessException;
 import com.digital.signer.util.Util;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,8 @@ public class DigitalSignerController {
     public ResponseEntity<Object> createUser(@RequestBody() CreateUserRequestDTO request) {
         try {
             return Util.getResponseSuccessful(this.digitalSignerService.createUser(request));
+        } catch (BusinessException e) {
+            return Util.getResponseBadRequest(e.getMessage());
         } catch (Exception e) {
             return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".createUser ", e.getMessage());
         }
