@@ -40,8 +40,8 @@ public class SQLConstant {
 
     public static final String SELECT_CONFIRM_FILE = "SELECT integrity_hash, digital_signed, bytes, k.\"key\" FROM public.file f " +
             "JOIN public.user_key uk on uk.id_user = ? " +
-            "JOIN public.\"key\" k on k.id = uk.id_key " +
-            "WHERE f.id = ? and k.is_public = true";
+            "JOIN public.\"key\" k on k.id = uk.id_key and k.is_public = true " +
+            "WHERE f.id = ?";
 
     public static final String SAVE_SHARE_FILE = "INSERT INTO public.file_share (id_user_source, id_user_target, id_file) VALUES(?, ?, ?)";
 

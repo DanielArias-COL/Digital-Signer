@@ -573,7 +573,11 @@ public class DigitalSignerService {
                     response.setError(error);
                     return response;
                 }
-
+            } else {
+                error.setErrorCode(Constant.ERROR_CODE_408);
+                error.setErrorMessage(Constant.ERROR_MESSAGE_408);
+                response.setError(error);
+                return response;
             }
 
         } catch (Exception e) {
