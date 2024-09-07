@@ -24,6 +24,8 @@ public class Constant {
 
     public static final String SIGNED_FILE = "SignedFile ";
 
+    public static final String SIGN_SHARING_FILE = "signSharingFile ";
+
     public static final String VERIFY_FILE = "verifyFile ";
 
     public static final String SHARE_FILE = "shareFile ";
@@ -42,6 +44,9 @@ public class Constant {
 
     public static final String ERROR_CODE_403 = "403";
     public static final String ERROR_MESSAGE_403 = "Error during saving files";
+
+    public static final String ERROR_CODE_404 = "404";
+    public static final String ERROR_MESSAGE_404 = "Error during singing file";
 
     public static final String ERROR_CODE_405 = "405";
     public static final String ERROR_MESSAGE_405 = "Error during file confirmation";

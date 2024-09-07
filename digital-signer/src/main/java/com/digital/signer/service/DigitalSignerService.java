@@ -377,8 +377,8 @@ public class DigitalSignerService {
 
         SignedFileResponseDTO response = new SignedFileResponseDTO();
         ErrorDTO error = new ErrorDTO();
-        error.setErrorCode(Constant.ERROR_CODE_403);
-        error.setErrorMessage(Constant.ERROR_MESSAGE_403);
+        error.setErrorCode(Constant.ERROR_CODE_404);
+        error.setErrorMessage(Constant.ERROR_MESSAGE_404);
         response.setError(error);
 
         String authHeader = request.getHeader("Authorization");
@@ -412,6 +412,52 @@ public class DigitalSignerService {
             logger.log(SEVERE, Constant.END, Constant.SING_IN + e.getMessage());
         }
         logger.log(INFO, Constant.END, Constant.SIGNED_FILE + response);
+        return response;
+    }
+
+    public SignShareFileResponseDTO signSharingFile(HttpServletRequest request, SignShareFileDTO signedFileDTO) {
+
+        logger.log(INFO, Constant.START, Constant.SIGN_SHARING_FILE);
+
+        SignShareFileResponseDTO response = new SignShareFileResponseDTO();
+        ErrorDTO error = new ErrorDTO();
+        error.setErrorCode(Constant.ERROR_CODE_404);
+        error.setErrorMessage(Constant.ERROR_MESSAGE_404);
+        response.setError(error);
+
+        String authHeader = request.getHeader("Authorization");
+        String token = null;
+        String userId = null;
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+            userId = jwtUtil.extractUserId(token);
+        }
+
+        if (userId == null || !jwtUtil.validateToken(token)) {
+            throw new RuntimeException("Invalid JWT Token");
+        }
+
+        try (Connection connection = this.dsDigitalSigner.getConnection()) {
+
+            if(UtilJDBC.exists(connection, SQLConstant.EXIST_FILE,
+                    ValueSQL.get(signedFileDTO.getIdFile(), Types.INTEGER))) {
+
+                UtilJDBC.insertUpdate(connection,SQLConstant.USER_DIGITAL_SHARE_SIGNED,
+                        ValueSQL.get(getSignedHash(signedFileDTO.getIdFile(), signedFileDTO.getPrivateKeyFile().getBytes()), Types.VARCHAR),
+                        ValueSQL.get(signedFileDTO.getIdFile(), Types.INTEGER),
+                        ValueSQL.get(Integer.valueOf(userId), Types.INTEGER),
+                        ValueSQL.get(signedFileDTO.getIdUserSource(), Types.INTEGER));
+
+                error.setErrorCode(Constant.ERROR_CODE_200);
+                error.setErrorMessage(Constant.ERROR_MESSAGE_200);
+                response.setError(error);
+            }
+
+        } catch (Exception e) {
+            logger.log(SEVERE, Constant.END, Constant.SIGN_SHARING_FILE + e.getMessage());
+        }
+        logger.log(INFO, Constant.END, Constant.SIGN_SHARING_FILE + response);
         return response;
     }
 

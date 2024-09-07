@@ -26,6 +26,8 @@ public class SQLConstant {
     public static final String USER_DIGITAL_SIGNED = "UPDATE public.file SET digital_signed = ? " +
             "WHERE id = ?;";
 
+    public static final String USER_DIGITAL_SHARE_SIGNED = "UPDATE public.file_share SET digital_signer_target=? WHERE id_file = ? and id_user_target = ? and id_user_source = ?";
+
     public static final String ADD_FILE = "INSERT INTO public.file " +
             "(\"name\", bytes, integrity_hash, user_ds_id) " +
             "VALUES(?, ?, ?, ?)";
