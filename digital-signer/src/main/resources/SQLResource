@@ -23,8 +23,9 @@ CREATE SEQUENCE public.id_key_seq
 	NO CYCLE;
 
 CREATE TABLE public."key" (
-	id int8 DEFAULT nextval('id_key_seq'::regclass) NULL,
+	id int8 NULL DEFAULT nextval('id_key_seq'::regclass),
 	"key" varchar NOT NULL,
+	is_public bool NULL,
 	CONSTRAINT key_unique UNIQUE (id)
 );
 
