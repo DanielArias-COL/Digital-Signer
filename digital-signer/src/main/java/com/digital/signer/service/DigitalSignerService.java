@@ -806,4 +806,66 @@ public class DigitalSignerService {
         }
         return null;
     }
+
+    public ShareUsersSignedResponseDTO listSharesFilesSigned(HttpServletRequest request, GetidDTO getidDTO) throws Exception {
+        logger.log(INFO, Constant.START, Constant.LIST_SHARE_USERS);
+
+        ShareUsersSignedResponseDTO response = new ShareUsersSignedResponseDTO();
+        ErrorDTO error = new ErrorDTO();
+        error.setErrorCode(Constant.ERROR_CODE_410);
+        error.setErrorMessage(Constant.ERROR_MESSAGE_410);
+        response.setError(error);
+        List<ShareUserSigned> users = new ArrayList<>();
+
+        String authHeader = request.getHeader("Authorization");
+        String token = null;
+        String userId = null;
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+            userId = jwtUtil.extractUserId(token);
+        }
+
+        if (userId == null || !jwtUtil.validateToken(token)) {
+            throw new RuntimeException("Invalid JWT Token");
+        }
+
+        PreparedStatement pst = null;
+        ResultSet res = null;
+
+        try (Connection connection = this.dsDigitalSigner.getConnection()) {
+
+            pst = connection.prepareStatement(SQLConstant.SELECT_SHARE_USERS_SIGNED);
+            pst.setInt(1, getidDTO.getIdFile());
+            pst.setInt(2, Integer.parseInt(userId));
+
+            res = pst.executeQuery();
+
+
+            ShareUserSigned user;
+            while (res.next()) {
+                int idUser = res.getInt(2);
+
+                if (Integer.parseInt(userId) != idUser) {
+                    user = new ShareUserSigned();
+                    user.setEmail(res.getString(1));
+                    user.setIdUser(idUser);
+                    users.add(user);
+                }
+            }
+            error.setErrorCode(Constant.ERROR_CODE_200);
+            error.setErrorMessage(Constant.ERROR_MESSAGE_200);
+            response.setError(error);
+            response.setListShareUserSigned(users);
+        } catch (Exception e) {
+            logger.log(SEVERE, Constant.END, Constant.SELECT_SHARE_USERS_SIGNED + e.getMessage());
+        } finally {
+            CerrarRecursosJDBC.closeResultSet(res);
+            CerrarRecursosJDBC.closePreparedStatement(pst);
+            logger.log(INFO, Constant.END, Constant.SELECT_SHARE_USERS_SIGNED + response);
+        }
+        return response;
+
+
+    }
 }

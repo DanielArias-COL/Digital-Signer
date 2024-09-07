@@ -1,9 +1,6 @@
 package com.digital.signer.controller;
 
-import com.digital.signer.dto.files.ShareFileRequestDTO;
-import com.digital.signer.dto.files.SignShareFileDTO;
-import com.digital.signer.dto.files.SignedFileDTO;
-import com.digital.signer.dto.files.VerifyFileRequestDTO;
+import com.digital.signer.dto.files.*;
 import com.digital.signer.dto.user.CreateUserRequestDTO;
 import com.digital.signer.dto.user.GoogleSingInRequestDTO;
 import com.digital.signer.dto.user.SingInRequestDTO;
@@ -135,6 +132,15 @@ public class DigitalSignerController {
     public ResponseEntity<Object> listMySharesFile(HttpServletRequest request) {
         try {
             return Util.getResponseSuccessful(this.digitalSignerService.listMySharesFile(request));
+        } catch (Exception e) {
+            return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".listMySharesFile ", e.getMessage());
+        }
+    }
+
+    @PostMapping("/user/listSharesFilesSigned")
+    public ResponseEntity<Object> listSharesFilesSigned(HttpServletRequest request, @RequestBody GetidDTO getidDTO) {
+        try {
+            return Util.getResponseSuccessful(this.digitalSignerService.listSharesFilesSigned(request, getidDTO));
         } catch (Exception e) {
             return Util.getResponseError(DigitalSignerController.class.getSimpleName() + ".listMySharesFile ", e.getMessage());
         }

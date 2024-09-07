@@ -32,6 +32,8 @@ public class Constant {
 
     public static final String LIST_SHARE_USERS = "shareFile ";
 
+    public static final String SELECT_SHARE_USERS_SIGNED = "List the shared files that are signed  ";
+
     /** Error list */
     public static final String ERROR_CODE_200 = "200";
     public static final String ERROR_MESSAGE_200 = "Successful process";

@@ -47,6 +47,13 @@ public class SQLConstant {
 
     public static final String SELECT_SHARE_USERS = "SELECT id, email FROM user_ds ud";
 
+    public static final String SELECT_SHARE_USERS_SIGNED = "select ud.email, ud.id from public.file_share fs2 " +
+            "join user_ds ud on ud.id = fs2.id_user_target " +
+            "where fs2.digital_signer_target is not null " +
+            "and fs2.id_file = ? " +
+            "and fs2.id_user_source = ?";
+
+
     public static final String SELECT_USER_EMAIL = "SELECT email FROM public.user_ds WHERE id = ?";
 
 }
